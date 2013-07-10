@@ -8,7 +8,6 @@ var fileData = new Buffer(fs.readFileSync("index.html"));
 
 app.get('/', function(request, response) {
   
-//  response.send('Hello World 2!');
     response.send(fileData.toString());
 });
 
