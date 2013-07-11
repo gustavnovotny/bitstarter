@@ -55,25 +55,13 @@ var checkHtmlFile = function(htmlfile, checksfile) {
         var present = $(checks[ii]).length > 0;
         out[checks[ii]] = present;
     }
-    return out;
-};
-
-var checkHtmlUrl = function(htmlfile, checksfile) {
-    $ = cheerio.load(restler.get(htmlfile).on('complete', function(data) {
-        return data;
-    }));
-    var checks = loadChecks(checksfile).sort();
-    var out = {};
-    for(var ii in checks) {
-        var present = $(checks[ii]).length > 0;
-        out[checks[ii]] = present;
-    }
-    return out;
-};
-
-var getStringFromUrl = function(checksfile) {
     
-    return restler.get('http://shrouded-bastion-8154.herokuapp.com/').on('complete', function(data) {
+    console.log(JSON.stringify(out, null, 4));
+};
+
+var checkFromUrl = function(url, checksfile) {
+    
+    return restler.get(url).on('complete', function(data) {
 //        console.log(data);
         $ = cheerio.load(data);
         var checks = loadChecks(checksfile).sort();
@@ -96,16 +84,23 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
         .option('-u, --url <url>', 'URL of the html structure')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
     
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
-    console.log("************************ ");
-    getStringFromUrl(program.checks);
-    
+    if (!program.file && !program.url) {
+        console.log("No source file entered. Reading default html file...");
+        var fileName = assertFileExists(HTMLFILE_DEFAULT);
+        checkHtmlFile(fileName, program.checks);
+        process.exit(1);
+    }
+
+    if (program.file) {
+        checkHtmlFile(program.file, program.checks);
+    }
+    if (program.url) {
+        checkFromUrl(program.url, program.checks);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
